@@ -1,0 +1,43 @@
+{% extends "global/Page.html" %}
+{% load otree %}
+
+{% block title %}
+3つ目の選択:宿泊客受入数の決定
+{% endblock %}
+
+{% block content %}
+<p>
+<strong>30秒以内</strong>に、あなたの旅館の宿泊客受入数を以下のプルダウンから選択してください。
+</p>
+<p>
+※時間内に選択されなかった場合、<strong>4人全員の実験がその時点で終了</strong>となってしまい、報酬をお渡しすること
+ができませんので、必ず選択してください。
+</p>
+
+<form method="post">
+  {{ formfields }}
+
+  <!-- 次へボタンを非表示にする -->
+  <style>
+    button[type="submit"] {
+      display: none;
+    }
+  </style>
+</form>
+
+<hr>
+<p style="font-size: 14px; margin-top: 20px;">
+  <strong>儲け</strong> = 宿泊客数 × 宿泊料 − キャンペーン費用<br>
+  <strong>あなたの温泉街に訪れるお客の割合</strong> = <span>あなたの温泉街の合計キャンペーン費用</span> / <span>２つの温泉街の合計キャンペーン費用</span><br>
+  <strong>あなたの温泉街に訪れるお客数</strong> = 36 × あなたの温泉街に来る割合<br>
+  <strong>宿泊料</strong> = あなたの温泉街に訪れるお客数 − あなたの温泉街の合計宿泊サービス数<br>
+  ※ 宿泊料またはあなたの温泉街の合計宿泊数が0以下になった場合、それらの値は自動的に<strong>0</strong>になります。
+</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // 必要ならJSをここに書けます
+</script>
+{% endblock %}
+
