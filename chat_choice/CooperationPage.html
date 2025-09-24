@@ -1,0 +1,40 @@
+{% extends "global/Page.html" %} {% load otree %} {% block content %}
+
+{% block title %}
+1つ目の選択:キャンペーン形態の選択
+{% endblock %}
+
+<p>
+ <strong>30秒以内</strong> に、キャンペーンで同じ温泉街のオーナーと「協力する」または「協力しない」を以下のプルダウン
+から選択してください。
+</p>
+<p>
+あなたの温泉街のオーナー両者が「協力する」を選択した場合、お互いがキャンペーン費用をいくらずつ出し
+合うのか話し合うために、60秒間チャットを使用できます。
+</p>
+<p>
+※時間内に選択されなかった場合、 <strong>「協力しない」</strong> とみなされます。
+</p>
+
+<!-- プレイヤー選択 -->
+<form method="post">
+  {{ formfields }}
+  <!-- 次へボタンは非表示 -->
+  <button type="submit" style="display: none" id="hidden-submit">次へ</button>
+</form>
+
+<hr>
+<p style="font-size: 14px; margin-top: 20px;">
+  <strong>儲け</strong> = 宿泊客数 × 宿泊料 − キャンペーン費用<br>
+  <strong>あなたの温泉街に訪れるお客の割合</strong> = <span>あなたの温泉街の合計キャンペーン費用</span> / <span>２つの温泉街の合計キャンペーン費用</span><br>
+  <strong>あなたの温泉街に訪れるお客数</strong> = 36 × あなたの温泉街に来る割合<br>
+  <strong>宿泊料</strong> = あなたの温泉街に訪れるお客数　- あなたの温泉街の合計宿泊サービス数<br>
+  ※ 宿泊料またはあなたの温泉街の合計宿泊数が0以下になった場合、それらの値は自動的に<strong>0</strong>になります。
+</p>
+
+{% endblock %} {% block scripts %} {% endblock %}
+
+
+
+
+
