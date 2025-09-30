@@ -151,24 +151,18 @@ class Player(BasePlayer):
         return {p.id_in_group: text for p in group.get_players() if p.team() == team}
 
 
-# E値が入力されずタイムアウトした場合、強制終了する。
+# 修正版
 def check_timeout_and_missing_e(group: Group, **kwargs):
-    # 引数がSubsessionやRoundなどの情報を含む場合があるため、kwargsを使用
-    # TODO: 引数の型（Group or Subsession等々）によって適切にチェックする
     for p in group.get_players():
-        print(f"p.timed_out {p.timed_out} , p.e {p.e}")
-
-        if p.timed_out and p.e == 0:
+        if p.timed_out or p.e is None:  # ← None判定を追加
             group.force_terminate = True
-            break
+            return  # このGroupだけ終了させる
 
-
-# Q値が入力されずタイムアウトした場合、強制終了する。
 def check_timeout_and_missing_q(group: Group, **kwargs):
     for p in group.get_players():
-        print(f"p.timed_out {p.timed_out} , p.q {p.q}")
-        if p.timed_out and p.q == 0:
+        if p.timed_out or p.q is None:
             group.force_terminate = True
-            break
+            return
+
 
 
