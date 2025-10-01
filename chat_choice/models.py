@@ -164,16 +164,18 @@ class Player(BasePlayer):
 
 # 修正版
 def check_timeout_and_missing_e(group: Group, **kwargs):
-    for p in group.get_players():
-        if p.timed_out or p.e is None:  # ← None判定を追加
-            group.force_terminate = True
-            return  # このGroupだけ終了させる
+    # 誰かがタイムアウトしたら終了
+    if any(p.timed_out for p in group.get_players()):
+        group.force_terminate = True
+    else:
+        group.force_terminate = False
 
 def check_timeout_and_missing_q(group: Group, **kwargs):
-    for p in group.get_players():
-        if p.timed_out or p.q is None:
-            group.force_terminate = True
-            return
+    # 誰かがタイムアウトしたら終了
+    if any(p.timed_out for p in group.get_players()):
+        group.force_terminate = True
+    else:
+        group.force_terminate = False
 
 
 
