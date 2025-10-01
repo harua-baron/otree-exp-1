@@ -18,10 +18,10 @@ class Subsession(BaseSubsession):
             for group in self.get_groups():
                 players = group.get_players()
                 # ペアを固定して player.vars に保存
-                players[0].vars['partner_id'] = players[1].id_in_group
-                players[1].vars['partner_id'] = players[0].id_in_group
-                players[2].vars['partner_id'] = players[3].id_in_group
-                players[3].vars['partner_id'] = players[2].id_in_group
+                players[0].partner_id = players[1].id_in_group
+                players[1].partner_id = players[0].id_in_group
+                players[2].partner_id = players[3].id_in_group
+                players[3].partner_id = players[2].id_in_group
         else:
             self.group_like_round(1)
         
@@ -125,6 +125,8 @@ class Player(BasePlayer):
     chat_log = models.LongStringField(blank=True, default="")
     timed_out = models.BooleanField(initial=False)
 
+    partner_id = models.IntegerField()
+
     def market(self):
         return 1 if self.id_in_group in [1, 2] else 2
 
@@ -176,6 +178,7 @@ def check_timeout_and_missing_q(group: Group, **kwargs):
         if p.timed_out and p.q == 0:
             group.force_terminate = True
             break
+
 
 
 
