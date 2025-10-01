@@ -5,7 +5,7 @@ from .models import Group, check_timeout_and_missing_e, check_timeout_and_missin
 class CooperationPage(Page):
     form_model = "player"
     form_fields = ["chat_choice"]
-    timeout_seconds = 30
+    timeout_seconds = 15
 
     def before_next_page(self):
         if self.timeout_happened and not self.player.chat_choice:
@@ -21,7 +21,7 @@ class CooperationChoiceWaitPage(WaitPage):
 class ChatPage(Page):
     form_model = "player"
     form_fields = []
-    timeout_seconds = 60
+    timeout_seconds = 45
     live_method = "live_chat"
 
     # テンプレート（〜.html）に渡す変数
@@ -48,7 +48,7 @@ class ChatPage(Page):
 class EChoice(Page):
     form_model = "player"
     form_fields = ["e"]
-    timeout_seconds = 30  # 任意で制限時間を設定
+    timeout_seconds = 45  # 任意で制限時間を設定
 
 
     def vars_for_template(self):
@@ -105,13 +105,13 @@ class MarketShare(Page):
     def is_displayed(self):
         return not self.group.force_terminate
 
-    timeout_seconds = 10  # 時間制限あり
+    timeout_seconds = 5  # 時間制限あり
 
 
 class QChoice(Page):
     form_model = "player"
     form_fields = ["q"]
-    timeout_seconds = 30
+    timeout_seconds = 45
     # 前のページで未選択＆強制終了した人がいたらこのページは表示しない
     def is_displayed(self):
         return not self.group.force_terminate
@@ -161,7 +161,7 @@ class CheckTimeoutAndMissingQ(WaitPage):
 
 
 class Results(Page):
-    timeout_seconds = 10
+    timeout_seconds = 5
 
     def is_displayed(self):
         return not self.group.force_terminate
@@ -214,6 +214,7 @@ page_sequence = [
     ForcedTermination,
     BreakPage1,
 ]
+
 
 
 
