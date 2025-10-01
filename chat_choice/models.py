@@ -24,12 +24,12 @@ class Subsession(BaseSubsession):
             groups = [pairs[i] + pairs[i+1] for i in range(0, len(pairs), 2)]
 
             # グループをセット
-            self.set_groups(groups)
+            self.set_group_matrix(groups)
 
         elif self.round_number <= 7:
-            # 2〜7ラウンドは1ラウンド目と同じ
+            # 2〜7ラウンドは1ラウンド目と同じグループを維持
             self.group_like_round(1)
-        
+
 
 class Group(BaseGroup):
     total_e = models.IntegerField()
@@ -174,6 +174,7 @@ def check_timeout_and_missing_q(group: Group, **kwargs):
         if p.timed_out or p.q is None:
             group.force_terminate = True
             return
+
 
 
 
