@@ -13,10 +13,16 @@ class C(BaseConstants):
 class Subsession(BaseSubsession):
     def creating_session(self):
         if self.round_number == 1:
-            # 1ラウンド目だけランダムにして、それを固定
-            self.group_randomly(fixed_id_in_group=True)
-        elif self.round_number <= 7:
-            # 2〜7ラウンド目は1ラウンド目と同じグループを使う
+            self.group_randomly()
+            # 4人グループごとにペアを作る
+            for group in self.get_groups():
+                players = group.get_players()
+                # ペアを固定して player.vars に保存
+                players[0].vars['partner_id'] = players[1].id_in_group
+                players[1].vars['partner_id'] = players[0].id_in_group
+                players[2].vars['partner_id'] = players[3].id_in_group
+                players[3].vars['partner_id'] = players[2].id_in_group
+        else:
             self.group_like_round(1)
         
 
@@ -170,6 +176,7 @@ def check_timeout_and_missing_q(group: Group, **kwargs):
         if p.timed_out and p.q == 0:
             group.force_terminate = True
             break
+
 
 
 
