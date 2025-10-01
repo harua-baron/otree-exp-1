@@ -132,24 +132,30 @@ class ResultsWaitPage2(WaitPage):
 
 # E値を未選択&タイムアウトしていないかチェックする
 class CheckTimeoutAndMissingE(WaitPage):
-    wait_for_all_groups = False  # ✅ 4人グループ単位でチェック
+    wait_for_all_groups = True
 
-    def after_all_players_arrive(self):
-        # このグループだけをチェックする
-        check_timeout_and_missing_e(self.group)
+    @staticmethod
+    def after_all_players_arrive(subsession):
+        for group in subsession.get_groups():
+            # e値が未選択またはタイムアウトした人がいる場合、強制終了する
+            check_timeout_and_missing_e(group)
 
+    # 前のページで未選択＆強制終了した人がいたらこのページは表示しない
     def is_displayed(self):
         return not self.group.force_terminate
 
 
 # Q値を未選択&タイムアウトしていないかチェックする
 class CheckTimeoutAndMissingQ(WaitPage):
-   wait_for_all_groups = False  # ✅ 4人グループ単位でチェック
+    wait_for_all_groups = True
 
-    def after_all_players_arrive(self):
-        # このグループだけをチェックする
-        check_timeout_and_missing_q(self.group)
+    @staticmethod
+    def after_all_players_arrive(subsession):
+        for group in subsession.get_groups():
+            # q値が未選択またはタイムアウトした人がいる場合、強制終了する
+            check_timeout_and_missing_q(group)
 
+    # 前のページで未選択＆強制終了した人がいたらこのページは表示しない
     def is_displayed(self):
         return not self.group.force_terminate
 
@@ -208,6 +214,7 @@ page_sequence = [
     ForcedTermination,
     BreakPage1,
 ]
+
 
 
 
