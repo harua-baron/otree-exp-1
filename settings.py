@@ -1,4 +1,5 @@
 from os import environ
+import dj_database_url
 
 
 SESSION_CONFIGS = [
@@ -30,6 +31,13 @@ LANGUAGE_CODE = 'ja'
 REAL_WORLD_CURRENCY_CODE = 'JPY'
 USE_POINTS = True
 
+DATABASES = {
+    'default': dj_database_url.config(
+        default=environ.get('DATABASE_URL', 'sqlite:///db.sqlite3')
+    )
+}
+
+
 ROOMS = [
     dict(
         name='main_experiment',
@@ -50,3 +58,4 @@ Here are some oTree games.
 SECRET_KEY = 'ookawazemi2025'
 
 INSTALLED_APPS = ['otree']
+
