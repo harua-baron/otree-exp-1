@@ -13,28 +13,21 @@ class C(BaseConstants):
 class Subsession(BaseSubsession):
     def creating_session(self):
         if self.round_number == 1:
-            players = self.get_players()
-            import random
-            random.shuffle(players)
-
-            # 2人ペアを作る
-            pairs = [players[i:i+2] for i in range(0, len(players), 2)]
-
-            # そのペアを2組まとめて4人グループにする
-            groups = [pairs[i] + pairs[i+1] for i in range(0, len(pairs), 2)]
-
-            # グループをセット
-            self.set_group_matrix(groups)
-
-        else:
-            # 2〜7ラウンドは1ラウンド目と同じグループを維持
+            # 1ラウンド目だけランダムにして、それを固定
+            self.group_randomly(fixed_id_in_group=True)
+        elif self.round_number <= 7:
+            # 2〜7ラウンド目は1ラウンド目と同じグループを使う
             self.group_like_round(1)
-
+        
 
 class Group(BaseGroup):
     total_e = models.IntegerField()
-    chat_log_team1 = models.LongStringField(blank=True, default="")  # チーム1用チャットログ
-    chat_log_team2 = models.LongStringField(blank=True, default="")  # チーム2用チャットログ
+    chat_log_team1 = models.LongStringField(
+        blank=True, default=""
+    )  # チーム1用チャットログ
+    chat_log_team2 = models.LongStringField(
+        blank=True, default=""
+    )  # チーム2用チャットログ
     force_terminate = models.BooleanField(initial=False)
     P1 = models.FloatField()
     P2 = models.FloatField()
@@ -42,6 +35,7 @@ class Group(BaseGroup):
     # team全員がC：協力するを選択しているか判定する
     def is_cooperation_established_for_team(self, team_number):
         team_players = [p for p in self.get_players() if p.team() == team_number]
+        # 全員が "C" を選択しているか判定
         return all(
             p.chat_choice == "C" for p in team_players if p.chat_choice is not None
         )
@@ -57,14 +51,26 @@ class Group(BaseGroup):
     def get_group_e_total(self):
         return sum(p.e for p in self.get_players() if p.e is not None)
 
-    # eを選択した後にGroupごとに計算したい処理
-    def calculate_market_share(self, player):
-        team_e_total = self.get_team_e_total(player.team())
-        group_e_total = self.get_group_e_total()
-        market_share = round(36 * team_e_total / group_e_total) if group_e_total != 0 else 0
+    # eを選択した後にGroupごとに計算したい処理を実装する
+    def sample_calculate_after_select_e(self):
+        # TODO:Groupごとに計算したい処理をここに実装する
+        team_e_total = self.group.get_team_e_total(self.player.team())
+        group_e_total = self.group.get_group_e_total()
+        market_share = (
+            (36 * team_e_total / group_e_total) if group_e_total != 0 else 0
+        )
+
+        market_share = (
+            round(36 * team_e_total / group_e_total) if group_e_total != 0 else 0
+        )
+
+
         return {"market_share": market_share}
 
+        # TODO:メソッド名も適宜変更する
+
     # 各グループのpayoffを計算するメソッド
+    # 引数のselfはGroup
     def set_payoffs(self):
         players = self.get_players()
         total_e = sum(p.e for p in players)
@@ -77,21 +83,28 @@ class Group(BaseGroup):
         q12 = q1 + q2
         q34 = q3 + q4
 
-        # 価格計算（安全にゼロ除算回避）
-        self.P1 = max(0, 36 - (total_e / e12) * q12) if e12 > 0 else 0
-        self.P2 = max(0, 36 - (total_e / e34) * q34) if e34 > 0 else 0
+        if e12 > 0:
+            self.P1 = max(0, 36 - (total_e / e12) * q12)
+        else:
+            self.P1 = 0
+
+        if e34 > 0:
+            self.P2 = max(0, 36 - (total_e / e34) * q34)
+        else:
+            self.P2 = 0
 
         for p in players:
             price = round(self.P1) if p.market() == 1 else round(self.P2)
             raw_profit = price * p.q - p.e
-            p.profit = max(0, round(raw_profit))  # 四捨五入しつつ負をゼロに
-            p.payoff = p.profit
+            p.profit = round(max(0, raw_profit))  # 四捨五入
+            p.payoff = p.profit  # payoffも整数で保存される
+
 
 
 class Player(BasePlayer):
     chat_choice = models.StringField(
         choices=C.CHAT_CHOICES,
-        label="以下から選択してください",
+        label="以下から選択してください",  # ← 画面に出る質問文
         blank=True
     )
     e = models.IntegerField(
@@ -102,7 +115,7 @@ class Player(BasePlayer):
         choices=C.Q_CHOICES,
         label="以下から選択してください"
     )
-    profit = models.IntegerField()  # payoffに合わせて整数に変更
+    profit = models.FloatField()
     chat_log = models.LongStringField(blank=True, default="")
     timed_out = models.BooleanField(initial=False)
 
@@ -118,25 +131,46 @@ class Player(BasePlayer):
         group = self.group
         label = self.participant.label or f"P{self.id_in_group}"
         text = f"{label}: {message}"
-        print(f"[live_chat] player {self.id_in_group} (team {team}) sent message: {text}")
+        print(
+            f"[live_chat] player {self.id_in_group} (team {team}) sent message: {text}"
+        )
 
         # チャットログをグループで記録
         if team == 1:
-            group.chat_log_team1 += f"\n{text}" if group.chat_log_team1 else text
+            if group.chat_log_team1:
+                group.chat_log_team1 += f"\n  {text}"
+            else:
+                group.chat_log_team1 = text
         else:
-            group.chat_log_team2 += f"\n{text}" if group.chat_log_team2 else text
+            if group.chat_log_team2:
+                group.chat_log_team2 += f"\n  {text}"
+            else:
+                group.chat_log_team2 = text
 
-        # 同じチームの全プレイヤーに送信
+        # 同じチームの全プレイヤーに送信（return形式）
         return {p.id_in_group: text for p in group.get_players() if p.team() == team}
 
 
-# 修正版: タイムアウトチェック
+# E値が入力されずタイムアウトした場合、強制終了する。
 def check_timeout_and_missing_e(group: Group, **kwargs):
-    group.force_terminate = any(p.timed_out or p.e is None for p in group.get_players())
+    # 引数がSubsessionやRoundなどの情報を含む場合があるため、kwargsを使用
+    # TODO: 引数の型（Group or Subsession等々）によって適切にチェックする
+    for p in group.get_players():
+        print(f"p.timed_out {p.timed_out} , p.e {p.e}")
+
+        if p.timed_out and p.e == 0:
+            group.force_terminate = True
+            break
 
 
+# Q値が入力されずタイムアウトした場合、強制終了する。
 def check_timeout_and_missing_q(group: Group, **kwargs):
-    group.force_terminate = any(p.timed_out or p.q is None for p in group.get_players())
+    for p in group.get_players():
+        print(f"p.timed_out {p.timed_out} , p.q {p.q}")
+        if p.timed_out and p.q == 0:
+            group.force_terminate = True
+            break
+
 
 
 
